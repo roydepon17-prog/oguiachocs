@@ -1,0 +1,42 @@
+name: Apply O'Guia Logo
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  add-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Insert O'Guia logo
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path("code.html")
+          s = p.read_text(encoding="utf-8")
+          marker = 'class="oguia-logo-inserted"'
+          if marker not in s:
+              target = '<a class="flex flex-col text-left group" data-path="home" href="#">'
+              replacement = '<a class="flex items-center gap-3 text-left group oguia-logo-inserted" data-path="home" href="#"><img src="assets/oguia-logo.jpg" alt="O\'Guia Chocolates by DAD\'s Farm" class="w-12 h-12 md:w-14 md:h-14 object-contain rounded-full ring-1 ring-tertiary/40"><span class="flex flex-col"><span class="font-headline-md text-headline-md tracking-wider text-on-surface group-hover:text-primary transition-colors">O\'GUIA</span><span class="font-label-caps text-label-caps tracking-[0.25em] text-tertiary -mt-1">&amp; DAD\'S FARM • CAPIZ</span></span>'
+              if target not in s:
+                  raise SystemExit("Header target not found")
+              s = s.replace(target, replacement, 1)
+              p.write_text(s, encoding="utf-8")
+
+      - name: Commit logo insertion
+        run: |
+          git config user.name "OGUIA CHOCOLATES"
+          git config user.email "roydepon17@gmail.com"
+          git add code.html
+          if git diff --cached --quiet; then
+            echo "Logo already inserted."
+          else
+            git commit -m "Insert O'Guia Chocolates logo into header"
+            git push
+          fi
